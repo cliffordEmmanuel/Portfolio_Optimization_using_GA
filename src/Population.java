@@ -30,11 +30,14 @@ public class Population {
         for (int i = 0; i < population.length; i++) {    //calculates the fitness for all members of the population
             population[i].fitness();
         }
-        //finding the maximum fitness to perform normalization...
+
         double totalFitness = 0.0;
         for (int i = 0; i < population.length; i++){
             totalFitness += population[i].score;
         }
+
+        //should have a sorting method
+        matingPool.iterator();
 
         System.out.println("totalfitness: " + totalFitness);
         //build the mating pool...
