@@ -45,7 +45,7 @@ public class DNA{
 
     @Override
     public String toString(){
-        return "Asset weights: " + asset_weight[0] + "," + asset_weight[1] + "," + asset_weight[2] + "\n"+
+        return "Asset weights: " + asset_weight[0] + "," + asset_weight[1]  + "," + asset_weight[2] + "\n"+
                 "Objective function value: "+ this.objectiveValue + "\n" +
                 "Portfolio return: "+ this.expected_portfolio_return + "\n" +
                 "Portfolio variance: "+ this.portfolio_variance + "\n";
@@ -54,9 +54,9 @@ public class DNA{
     public String toString(long money) {
         DecimalFormat df1 = new DecimalFormat(".##");
         return "\nWith GHC"+ money +" you can invest:\n\n" +
-                "  GHC" +((long)asset_weight[0] * money)/100 + " into MFund 1\n"  +  //Databank Epack Fund
-                "  GHC" +((long)asset_weight[1] * money)/100 + " into MFund 2\n" +   //HFC Equity Trust Fund
-                "  GHC" +((long)asset_weight[2] * money)/100 + " into MFund 3\n" +   //SAS Fortune Fund
+                "  GHC" +((long)asset_weight[0] * money) + " into MFund 1\n"  +  //Databank Epack Fund
+                "  GHC" +((long)asset_weight[1] * money) + " into MFund 2\n" +   //HFC Equity Trust Fund
+                "  GHC" +((long)asset_weight[2] * money) + " into MFund 3\n" +   //SAS Fortune Fund
                 "\nWith an Expected return of " + df1.format(expected_portfolio_return * 100) + "%" +
                 " at a " + df1.format(this.portfolio_variance) + "% risk " + "\n";
     }
@@ -64,9 +64,9 @@ public class DNA{
     private double portfolio_return_calc(){
         double sum = 0.0;
         for (int i =0; i < this.asset_weight.length; i++){
-            sum+= (this.mean_return[i] * this.asset_weight[i]);  //expected return * asset weight...
+            sum+= (this.mean_return[i] * (this.asset_weight[i]));  //expected return * asset weight...
         }
-        return (sum/100);  //since we're dealing with percentage...
+        return sum;  //since we're dealing with percentage...
     }
 
     //random number generators...
@@ -76,7 +76,7 @@ public class DNA{
         return rn;
     }
 
-    private double random(int num) {
+    static double random(int num) {
         return (Math.random() * num);
     }
 
@@ -99,6 +99,9 @@ public class DNA{
 //            else rand_weights[2] = 100- (rand_weights[0] +rand_weights[1]);
 //            //random_weights();
 //        }
+        rand_weights[0] /=100;
+        rand_weights[1] /=100;
+        rand_weights[2] /=100;
         return rand_weights;
 
 
@@ -115,14 +118,14 @@ public class DNA{
                   +  (2 * this.asset_weight[0] * this.asset_weight[2] * this.covariance[1])
                   +  (2 * this.asset_weight[1] * this.asset_weight[2] * this.covariance[2]) );
 
-        this.portfolio_variance = (t1 + t2)/100;
+        this.portfolio_variance = (t1 + t2);
     }
 
 
     //objective function value...
     double returnObjectiveFnValue(){
         calcPortfolioVariance();
-        return ( (this.expected_portfolio_return * 100 ) - this.portfolio_variance);
+        return ( (this.expected_portfolio_return  ) - this.portfolio_variance);
     }
     //crossover operator
     DNA crossover(DNA partner) {
@@ -142,7 +145,7 @@ public class DNA{
     //mutation operator...
     void mutate(double mutationRate) {
         for (int i = 0; i < asset_weight.length; i++) {
-            if (random(1) < mutationRate) asset_weight[random(0,2)]++;
+            if (random(1) < mutationRate) asset_weight[random(0,2)]+=0.01;
         }
     }
 
@@ -161,7 +164,7 @@ public class DNA{
         for(int i = 0; i<this.asset_weight.length; i++){
             sum += this.asset_weight[i];
         }
-        if (sum == 100.0)return true;
+        if (sum == 1.0)return true;
         else return false;
     }
 

@@ -16,11 +16,12 @@ public class Population {
 
 
     Population( long investmentAmt) {
-        this.mutationRate = 0.01;
+        this.mutationRate = 0.05;
         this.investmentAmt = investmentAmt;
         this.population = new DNA[200];
         for (int i = 0; i < population.length; i++) population[i] = new DNA();
     }
+
 
     String display(){
         DecimalFormat df1 = new DecimalFormat(".##");
@@ -30,10 +31,10 @@ public class Population {
         }
         DNA[] list = sortByObjectiveVal();
 //        ________________________________________________
-//        //displaying the entire population
-//        for(DNA x: this.population){
-//            System.out.println(x.toString());
-//        }
+        //displaying the entire population
+        for(DNA x: this.population){
+            System.out.println(x.toString());
+        }
 //        ________________________________________________
 //
         return list[0].toString(investmentAmt);
@@ -50,7 +51,7 @@ public class Population {
         double totalFitness = 0.0;
         for (DNA x: this.population) totalFitness += x.objectiveValue;
 
-        return (totalFitness/this.population.length) ;
+        return (totalFitness/this.population.length)  ;
     }
 
     void calcFitness(){
@@ -73,37 +74,75 @@ public class Population {
             rk--;
         }
         for (int i = 0; i < this.population.length; i++) {
-            if(pop[i].nonZeroNegative() == false) continue;
-            if(pop[i].sumTo100() == false) continue;
+            if(!pop[i].nonZeroNegative()) continue;
+            if(!pop[i].sumTo100()) continue;
             int n = pop[i].getRank() ;
             for (int j = 0; j < n; j++) {
                 matingPool.add(pop[i]);
             }
         }
+        //performing the crossover and the mutation
+        reproduce();
     }
 
     void tournamentSelection(){
         //What is the size of the mating pool........
-        //randomly select a number of portfolios
         //i'm assuming a tournament round is made of 4 competitors
         DNA [] round = new DNA[4];
-        for (int i =0; i < round.length; i++){
-            round[i] = this.population[random(0,this.population.length)];
-            round[i].returnObjectiveFnValue();
+        while(matingPool.size() != 100){
+            for (int i =0; i < round.length; i++){
+                round[i] = this.population[random(0,this.population.length-1)];//randomly select a number of portfolios
+                while( !(round[i].nonZeroNegative()) && (!round[i].sumTo100()) )
+                    round[i] = this.population[random(0,this.population.length-1)];
+                round[i].returnObjectiveFnValue();//calculate their fitness
+            }
+            //determine the fittest among them and add to a new population
+            Arrays.sort(round, new ObjectiveValComparator()); //sort the DNA in the tournament
+            matingPool.add(round[0]); // add the fitest into the mating pool
+            //repeat this several times till the new population is full.
         }
-        //determine the fittest among them and add to a new population
-        Arrays.sort(round, new ObjectiveValComparator());
 
-        //repeat this several times till the new population is full.
+        reproduce();
     }
 
-    void acceptReject(){ }
-    
-    void reproduce() throws ArrayIndexOutOfBoundsException{
+    void randomPoolSelection(){
+        calcFitness();
+
+        //finding the total sum
+        double sum = 0.0;
+        for(DNA x: this.population) sum += x.objectiveValue;
+
+        //normalizing the fitness value for the population
+        for(DNA x: this.population) x.objectiveValue = x.objectiveValue/sum;
+
+        for(int i = 0; i<this.population.length;i++){
+            DNA n = pickOne(this.population);
+            while( (n.nonZeroNegative()) && (n.sumTo100()) ){
+                matingPool.add(n);
+                break;
+            }
+
+        }
+        reproduce();
+
+    }
+
+    private DNA pickOne(DNA [] arr){
+        int i = 0;
+        double r = random(1);
+        while (r > 0){
+            r -= arr[i].objectiveValue;
+            i++;
+        } i--;
+        return arr[i];
+    }
+
+
+    private void reproduce() throws ArrayIndexOutOfBoundsException{
         for (int i = 0; i < population.length; i++) {
             //two random numbers to randomly select 2 parents from the mating pool...
-            int a = (int) (Math.random() * matingPool.size()-1);
-            int b = (int) (Math.random() * matingPool.size()-1);
+            int a =  random(0,matingPool.size()-1);
+            int b =  random(0,matingPool.size()-1);
             DNA partnerA = matingPool.get(a);
             DNA partnerB = matingPool.get(b);
             DNA child = partnerA.crossover(partnerB);
@@ -117,8 +156,21 @@ public class Population {
     void run(){
         while(this.generations != 500 ){
             this.rouletteWheelSelection();
-            this.reproduce();
+            //this.reproduce();
         }
     }
+
+    //ok so now i need to write a test for convergence for the entire population..
+    //by convergence we mean all the elements in the population starts to look similar.
+    //ok so look through the population and count the number of similar DNA take the one with the highest count divide by the
+    //length of the population and multiply by 100.
+    //and return the result
+    //if result is greater or equal to the required convergence method
+    //stop the entire evolution process
+
+    //display computing time
+    //number of generations
+    //accuracy????
+    //the highest performing portfolio to string as well...
 
 }
